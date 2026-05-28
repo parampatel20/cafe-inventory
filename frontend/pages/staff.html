@@ -60,7 +60,7 @@
   }
 
   async function loadStaff() {
-    const staff = await apiFetch('/staff');
+    const staff = await apiFetch('/api/staff');
     const tbody = document.getElementById('staffTable');
     tbody.innerHTML = (staff || []).map(s => `
       <tr>
@@ -89,7 +89,7 @@
     if (!body.name || !body.email || !body.password)
       return showAlert('alert', 'Fill all fields');
 
-    const data = await apiFetch('/staff', 'POST', body);
+    const data = await apiFetch('/api/staff', 'POST', body);
     if (data.id) {
       showAlert('alert', 'Staff added!', 'success');
       loadStaff();
@@ -100,13 +100,13 @@
 
   async function disableStaff(id) {
     if (!confirm('Disable this staff?')) return;
-    await apiFetch(`/staff/${id}/disable`, 'PATCH');
+    await apiFetch(`/api/staff/${id}/disable`, 'PATCH');
     loadStaff();
   }
 
   async function removeStaff(id) {
     if (!confirm('Remove this staff permanently?')) return;
-    await apiFetch(`/staff/${id}`, 'DELETE');
+    await apiFetch(`/api/staff/${id}`, 'DELETE');
     loadStaff();
   }
 
