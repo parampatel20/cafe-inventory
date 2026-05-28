@@ -1,5 +1,5 @@
 const _host = window.location.hostname;
-const API = "https://cafe-inventory-18mx.onrender.com";
+const API_BASE = "https://cafe-inventory-18mx.onrender.com";
 const APP = window.location.origin;
 
 function getToken() { return localStorage.getItem('token'); }
