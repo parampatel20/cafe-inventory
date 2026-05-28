@@ -74,7 +74,7 @@
 
     if (!categoryName) return showAlert('alert', 'Enter category name');
 
-    const data = await apiFetch('/categories', 'POST', { categoryName, subCategories });
+    const data = await apiFetch('/api/categories', 'POST', { categoryName, subCategories });
     if (data._id) {
       showAlert('alert', 'Category added!', 'success');
       document.getElementById('categoryName').value  = '';
