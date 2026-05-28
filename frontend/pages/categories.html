@@ -56,7 +56,7 @@
   }
 
   async function loadCategories() {
-    const cats  = await apiFetch('/categories');
+    const cats  = await apiFetch('/api/categories');
     const tbody = document.getElementById('catTable');
     tbody.innerHTML = (cats || []).map(c => `
       <tr>
@@ -87,7 +87,7 @@
 
   async function deleteCategory(id) {
     if (!confirm('Delete this category?')) return;
-    await apiFetch('/categories/' + id, 'DELETE');
+    await apiFetch('/api/categories/' + id, 'DELETE');
     loadCategories();
   }
 
