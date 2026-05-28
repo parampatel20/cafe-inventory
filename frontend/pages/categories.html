@@ -38,7 +38,7 @@
               <th id="actionHeader">Actions</th>
             </tr>
           </thead>
-          <tbody id="catTable"></tbody>
+          <tbody id="categoryList"></tbody>
         </table>
       </div>
     </div>
@@ -56,23 +56,35 @@
   }
 
   async function loadCategories() {
-  const cats = await apiFetch("/api/categories");
+  try {
+    const cats = await apiFetch("/api/categories");
 
-  console.log("Categories response:", cats);
+    console.log("Categories response:", cats);
 
-  const categoryList = Array.isArray(cats)
-    ? cats
-    : cats.categories || cats.data || [];
+    const categoryList = Array.isArray(cats)
+      ? cats
+      : cats.categories || cats.data || [];
 
-  document.getElementById("categoryList").innerHTML = categoryList.map(cat => `
-    <tr>
-      <td>${cat.name || cat.categoryName || ""}</td>
-      <td>${cat.type || cat.stockType || ""}</td>
-      <td>
-        <button onclick="deleteCategory('${cat._id}')">Delete</button>
-      </td>
-    </tr>
-  `).join("");
+    const categoryListElement = document.getElementById("categoryList");
+
+    if (!categoryListElement) {
+      console.error("Element with id='categoryList' not found in HTML");
+      return;
+    }
+
+    categoryListElement.innerHTML = categoryList.map(cat => `
+      <tr>
+        <td>${cat.name || cat.categoryName || ""}</td>
+        <td>${cat.type || cat.stockType || ""}</td>
+        <td>
+          <button onclick="deleteCategory('${cat._id}')">Delete</button>
+        </td>
+      </tr>
+    `).join("");
+
+  } catch (error) {
+    console.error("Failed to load categories:", error.message);
+  }
 }
 
   async function addCategory() {
