@@ -1,85 +1,142 @@
-# ☕ Cafe Inventory System — Setup Guide
+# ☕ Cafe Inventory Management System
 
-## What's on this PC
+A simple and practical **Cafe Inventory Management System** built for managing cafe stock, staff access, item categories, price updates, bill uploads, and inventory control from any device.
 
-This PC runs the Cafe Inventory System automatically.  
-It manages your stock, staff, and billing — accessible from any device on your network or remotely via Tailscale.
-
----
-
-## Starting & Stopping the App
-
-| Action | What to do |
-|---|---|
-| **Start the app** | Double-click `START.bat` |
-| **Stop the app** | Double-click `STOP.bat` |
-
-> The app starts automatically when the PC boots — you normally don't need to do anything.
+This project is designed for a real cafe environment where the owner/admin can fully manage inventory, while staff members can perform limited actions based on their permissions.
 
 ---
 
-## Accessing the App
+## 📌 Project Overview
 
-**From inside the cafe (same Wi-Fi):**
-Open any browser and go to:
-```
-http://<this PC's local IP>
-```
-*(The START.bat script will display this IP when you run it)*
+The Cafe Inventory Management System helps cafe owners manage daily stock and inventory in an organized way.  
+It supports role-based access, item management, category filtering, bill uploads, and remote access through phone or laptop.
 
-**From outside the cafe (remotely):**
-Open Tailscale on your device, then go to:
-```
-http://<tailscale IP of cafe PC>
-```
-*(The Tailscale IP looks like 100.x.x.x — find it in the Tailscale app)*
+The system is useful for cafes, restaurants, cloud kitchens, bakeries, and small food businesses.
 
 ---
 
-## Troubleshooting
+## 🚀 Features
 
-### App won't open in browser
-1. Make sure Docker Desktop is running (check the taskbar — whale icon 🐳)
-2. Double-click `START.bat` and wait for it to finish
-3. Try again in the browser
+### 👨‍💼 Admin / Owner Features
 
-### Can't access remotely
-1. Open Tailscale on your device — make sure it shows "Connected"
-2. Open Tailscale on the cafe PC — make sure it shows "Connected"
-3. Use the `100.x.x.x` IP, not the local IP
-
-### Docker Desktop won't start
-1. Restart the PC
-2. After login, wait 1–2 minutes for Docker to start automatically
-3. Then double-click `START.bat`
-
----
-
-## Updating the App (for the developer)
-
-If you receive an updated version of the project:
-
-1. Copy the new files into `C:\cafe-inventory\` (replace existing)
-2. Open PowerShell in that folder
-3. Run: `docker compose up -d --build`
+- Login as admin
+- Add new inventory items
+- Remove inventory items
+- Update item price
+- Update item quantity
+- Add new staff members
+- Remove staff members
+- Give or remove staff access
+- Upload bills and purchase records
+- Manage item categories
+- View inventory from phone or laptop
+- Access system remotely using Tailscale
 
 ---
 
-## Important Files
+### 👥 Staff Features
 
-```
+- Login as staff
+- Add inventory items
+- Update stock quantity
+- Upload bills if permission is given
+- View available inventory
+- Cannot delete items unless admin gives access
+
+---
+
+### 📦 Inventory Features
+
+- Add item name
+- Add item quantity
+- Add item price
+- Add item category
+- Edit item details
+- Delete item
+- Sort/filter items by category
+- Upload bill image or document
+- Track kitchen, bar, and takeaway inventory separately
+
+---
+
+## 🗂️ Inventory Categories
+
+Example categories used in the system:
+
+### 🍝 Kitchen
+
+- Pasta
+- Pizza
+- Sandwich
+- Burger
+- Sauces
+- Raw material
+
+### ☕ Bar
+
+- Coffee
+- Soda
+- Tea
+- Cold drinks
+- Syrups
+- Milk products
+
+### 📦 Take Away
+
+- Pizza box
+- Paper cups
+- Straws
+- Tissue
+- Bags
+- Packaging material
+
+---
+
+## 🛠️ Tech Stack
+
+### Frontend
+
+- HTML
+- CSS
+- JavaScript
+
+### Backend
+
+- Node.js
+- Express.js
+
+### Database
+
+- MongoDB
+
+### Deployment / Running
+
+- Docker
+- Docker Compose
+- Tailscale for remote access
+
+---
+
+## 📁 Project Structure
+
+```text
 cafe-inventory/
-├── START.bat              ← Double-click to start
-├── STOP.bat               ← Double-click to stop
-├── docker-compose.yml     ← App configuration (don't delete)
+│
 ├── backend/
-│   ├── .env               ← Secret settings (don't share)
-│   └── uploads/           ← Item images stored here
-└── frontend/              ← Website files
-```
-
----
-
-## Support
-
-Contact your developer for any issues beyond basic troubleshooting.
+│   ├── uploads/
+│   ├── .env
+│   ├── server.js
+│   ├── package.json
+│   └── ...
+│
+├── frontend/
+│   ├── index.html
+│   ├── css/
+│   ├── js/
+│   └── ...
+│
+├── docker-compose.yml
+├── START.bat
+├── STOP.bat
+├── .gitignore
+└── README.md
