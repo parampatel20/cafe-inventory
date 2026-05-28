@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Upload Bill</title>
+  <link rel="stylesheet" href="../css/style.css"/>
+</head>
+<body>
+<div class="layout">
+  <aside class="sidebar" id="sidebar"></aside>
+  <div class="main-content">
+    <div class="topbar">
+      <button class="hamburger" onclick="toggleSidebar()">☰</button>
+      <h2>Upload Bill</h2>
+    </div>
+    <div class="section-card">
+      <div id="alert" class="alert" style="display:none"></div>
+      <div class="form-group">
+        <label>Bill Number</label>
+        <input type="text" id="billNumber" placeholder="e.g. INV-001"/>
+      </div>
+      <div class="form-group">
+        <label>Supplier Name</label>
+        <input type="text" id="supplierName" placeholder="e.g. Fresh Farms"/>
+      </div>
+      <div class="form-group">
+        <label>Bill Date</label>
+        <input type="date" id="billDate"/>
+      </div>
+      <div class="form-group">
+        <label>Total Amount (₹)</label>
+        <input type="number" id="totalAmount" placeholder="e.g. 5000"/>
+      </div>
+      <div class="form-group">
+        <label>Category</label>
+        <select id="category">
+          <option value="">Select Category</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label>Bill File (Image or PDF)</label>
+        <input type="file" id="billFile" accept=".jpg,.jpeg,.png,.pdf"/>
+      </div>
+      <button class="btn btn-primary" onclick="uploadBill()">Upload Bill</button>
+    </div>
+  </div>
+</div>
+<script src="../js/api.js"></script>
+<script src="../js/sidebar.js"></script>
+<script>
+  checkAuth();
+  loadSidebar('upload-bill');
+
+  function toggleSidebar() {
+    document.getElementById('sidebar').classList.toggle('open');
+  }
+
+  async function loadCategories() {
+    const cats = await apiFetch('/categories');
+    const sel  = document.getElementById('category');
+    (cats || []).forEach(c => {
+      const opt = document.createElement('option');
+      opt.value = c.categoryName;
+      opt.textContent = c.categoryName;
+      sel.appendChild(opt);
+    });
+  }
+
+  async function uploadBill() {
+    const formData = new FormData();
+    formData.append('billNumber',   document.getElementById('billNumber').value);
+    formData.append('supplierName', document.getElementById('supplierName').value);
+    formData.append('billDate',     document.getElementById('billDate').value);
+    formData.append('totalAmount',  document.getElementById('totalAmount').value);
+    formData.append('category',     document.getElementById('category').value);
+    const file = document.getElementById('billFile').files[0];
+    if (file) formData.append('billFile', file);
+
+    const data = await apiFetch('/bills', 'POST', formData, true);
+    if (data._id) {
+      showAlert('alert', 'Bill uploaded!', 'success');
+    } else {
+      showAlert('alert', data.message || 'Upload failed');
+    }
+  }
+
+  loadCategories();
+</script>
+</body>
+</html>

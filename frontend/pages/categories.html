@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Categories</title>
+  <link rel="stylesheet" href="../css/style.css"/>
+</head>
+<body>
+<div class="layout">
+  <aside class="sidebar" id="sidebar"></aside>
+  <div class="main-content">
+    <div class="topbar">
+      <button class="hamburger" onclick="document.getElementById('sidebar').classList.toggle('open')">☰</button>
+      <h2>Categories</h2>
+    </div>
+    <div class="section-card">
+      <h3>Add Category</h3>
+      <div id="alert" class="alert" style="display:none"></div>
+      <div class="form-group">
+        <label>Category Name</label>
+        <input type="text" id="categoryName" placeholder="e.g. Kitchen"/>
+      </div>
+      <div class="form-group">
+        <label>Sub Categories (comma separated)</label>
+        <input type="text" id="subCategories" placeholder="e.g. Pasta, Sauce, Cheese"/>
+      </div>
+      <button class="btn btn-primary" onclick="addCategory()">Add Category</button>
+    </div>
+    <div class="section-card">
+      <h3>All Categories</h3>
+      <div class="table-container">
+        <table>
+          <thead>
+            <tr>
+              <th>Name</th>
+              <th>Sub Categories</th>
+              <th id="actionHeader">Actions</th>
+            </tr>
+          </thead>
+          <tbody id="catTable"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+<script src="../js/api.js"></script>
+<script src="../js/sidebar.js"></script>
+<script>
+  checkAuth();
+  loadSidebar('categories');
+  const isAdmin = getUser().role === 'admin';
+
+  if (!isAdmin) {
+    document.getElementById('actionHeader').style.display = 'none';
+  }
+
+  async function loadCategories() {
+    const cats  = await apiFetch('/categories');
+    const tbody = document.getElementById('catTable');
+    tbody.innerHTML = (cats || []).map(c => `
+      <tr>
+        <td>${c.categoryName}</td>
+        <td>${(c.subCategories || []).join(', ')}</td>
+        <td>${isAdmin ? `<button class="btn btn-danger btn-sm" onclick="deleteCategory('${c._id}')">Delete</button>` : ''}</td>
+      </tr>
+    `).join('') || '<tr><td colspan="3">No categories yet</td></tr>';
+  }
+
+  async function addCategory() {
+    const categoryName  = document.getElementById('categoryName').value.trim();
+    const subCategories = document.getElementById('subCategories').value
+      .split(',').map(s => s.trim()).filter(Boolean);
+
+    if (!categoryName) return showAlert('alert', 'Enter category name');
+
+    const data = await apiFetch('/categories', 'POST', { categoryName, subCategories });
+    if (data._id) {
+      showAlert('alert', 'Category added!', 'success');
+      document.getElementById('categoryName').value  = '';
+      document.getElementById('subCategories').value = '';
+      loadCategories();
+    } else {
+      showAlert('alert', data.message || 'Error adding category');
+    }
+  }
+
+  async function deleteCategory(id) {
+    if (!confirm('Delete this category?')) return;
+    await apiFetch('/categories/' + id, 'DELETE');
+    loadCategories();
+  }
+
+  loadCategories();
+</script>
+</body>
+</html>

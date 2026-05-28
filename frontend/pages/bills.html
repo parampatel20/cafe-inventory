@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Bills</title>
+  <link rel="stylesheet" href="../css/style.css"/>
+</head>
+<body>
+<div class="layout">
+  <aside class="sidebar" id="sidebar"></aside>
+  <div class="main-content">
+    <div class="topbar">
+      <button class="hamburger" onclick="toggleSidebar()">☰</button>
+      <h2>Bills</h2>
+      <a href="upload-bill.html" class="btn btn-primary btn-sm">+ Upload Bill</a>
+    </div>
+    <div class="section-card">
+      <div class="search-bar">
+        <input type="text"  id="supplier"  placeholder="Search supplier..." oninput="loadBills()"/>
+        <select id="filterCat" onchange="loadBills()">
+          <option value="">All Categories</option>
+        </select>
+        <input type="date" id="startDate" onchange="loadBills()"/>
+        <input type="date" id="endDate"   onchange="loadBills()"/>
+      </div>
+      <div class="table-container">
+        <table>
+          <thead>
+            <tr><th>Bill No</th><th>Supplier</th><th>Date</th><th>Amount</th><th>Category</th><th>Uploaded By</th><th>File</th><th>Actions</th></tr>
+          </thead>
+          <tbody id="billsTable"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+<script src="../js/api.js"></script>
+<script src="../js/sidebar.js"></script>
+<script>
+  checkAuth();
+  loadSidebar('bills');
+  const isAdmin = getUser().role === 'admin';
+
+  function toggleSidebar() {
+    document.getElementById('sidebar').classList.toggle('open');
+  }
+
+  async function loadCategories() {
+    const cats = await apiFetch('/categories');
+    const sel  = document.getElementById('filterCat');
+    (cats || []).forEach(c => {
+      const opt = document.createElement('option');
+      opt.value = c.categoryName;
+      opt.textContent = c.categoryName;
+      sel.appendChild(opt);
+    });
+  }
+
+  async function loadBills() {
+    const supplier  = document.getElementById('supplier').value;
+    const category  = document.getElementById('filterCat').value;
+    const startDate = document.getElementById('startDate').value;
+    const endDate   = document.getElementById('endDate').value;
+
+    let url = '/bills?';
+    if (supplier)  url += `supplier=${supplier}&`;
+    if (category)  url += `category=${category}&`;
+    if (startDate) url += `startDate=${startDate}&`;
+    if (endDate)   url += `endDate=${endDate}`;
+
+    const bills = await apiFetch(url);
+    const tbody = document.getElementById('billsTable');
+    tbody.innerHTML = (bills || []).map(b => `
+      <tr>
+        <td>${b.billNumber}</td>
+        <td>${b.supplierName}</td>
+        <td>${new Date(b.billDate).toLocaleDateString()}</td>
+        <td>₹${b.totalAmount}</td>
+        <td>${b.category}</td>
+        <td>${b.uploadedBy?.name || 'N/A'}</td>
+        <td>${b.billFile ? `<a href="http://${window.location.hostname}:5001/uploads/${b.billFile}" target="_blank">View</a>` : 'No file'}</td>
+        <td>${isAdmin ? `<button class="btn btn-danger btn-sm" onclick="deleteBill('${b._id}')">Delete</button>` : ''}</td>
+      </tr>
+    `).join('');
+  }
+
+  async function deleteBill(id) {
+    if (!confirm('Delete this bill?')) return;
+    await apiFetch(`/bills/${id}`, 'DELETE');
+    loadBills();
+  }
+
+  loadCategories();
+  loadBills();
+</script>
+</body>
+</html>

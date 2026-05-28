@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Edit Item</title>
+  <link rel="stylesheet" href="../css/style.css"/>
+</head>
+<body>
+<div class="layout">
+  <aside class="sidebar" id="sidebar"></aside>
+  <div class="main-content">
+    <div class="topbar">
+      <button class="hamburger" onclick="document.getElementById('sidebar').classList.toggle('open')">☰</button>
+      <h2>Edit Item</h2>
+    </div>
+    <div class="section-card">
+      <div id="alert" class="alert" style="display:none"></div>
+      <div class="form-group">
+        <label>Item Name</label>
+        <input type="text" id="itemName"/>
+      </div>
+      <div class="form-group">
+        <label>Category</label>
+        <select id="category"></select>
+      </div>
+      <div class="form-group">
+        <label>Sub Category</label>
+        <input type="text" id="subCategory"/>
+      </div>
+      <div class="form-group">
+        <label>Quantity</label>
+        <input type="number" id="quantity"/>
+      </div>
+      <div class="form-group">
+        <label>Unit</label>
+        <select id="unit">
+          <option value="kg">kg</option>
+          <option value="liter">liter</option>
+          <option value="packet">packet</option>
+          <option value="box">box</option>
+          <option value="piece">piece</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label>Price (₹)</label>
+        <input type="number" id="price"/>
+      </div>
+      <button class="btn btn-primary" onclick="updateItem()">Update Item</button>
+      <button class="btn btn-secondary" onclick="goBack()" style="margin-left:0.5rem">Cancel</button>
+    </div>
+  </div>
+</div>
+<script src="../js/api.js"></script>
+<script src="../js/sidebar.js"></script>
+<script>
+  checkAuth();
+  loadSidebar('inventory');
+
+  const params    = new URLSearchParams(window.location.search);
+  const id        = params.get('id');
+  const stockType = params.get('stockType') || 'cafe';
+
+  function goBack() {
+    window.location.href = stockType === 'godown'
+      ? '/pages/godown.html'
+      : '/pages/inventory.html';
+  }
+
+  async function loadItem() {
+    if (!id) {
+      showAlert('alert', 'No item ID found');
+      return;
+    }
+    const item = await apiFetch('/inventory/' + id);
+    if (!item || !item._id) {
+      showAlert('alert', 'Item not found');
+      return;
+    }
+
+    document.getElementById('itemName').value    = item.itemName    || '';
+    document.getElementById('subCategory').value = item.subCategory || '';
+    document.getElementById('quantity').value    = item.quantity    || '';
+    document.getElementById('price').value       = item.price       || '';
+    document.getElementById('unit').value        = item.unit        || 'kg';
+
+    const cats = await apiFetch('/categories');
+    const sel  = document.getElementById('category');
+    sel.innerHTML = '';
+    (cats || []).forEach(c => {
+      const opt = document.createElement('option');
+      opt.value = c.categoryName;
+      opt.textContent = c.categoryName;
+      if (c.categoryName === item.category) opt.selected = true;
+      sel.appendChild(opt);
+    });
+  }
+
+  async function updateItem() {
+    const body = {
+      itemName:    document.getElementById('itemName').value,
+      category:    document.getElementById('category').value,
+      subCategory: document.getElementById('subCategory').value,
+      quantity:    document.getElementById('quantity').value,
+      unit:        document.getElementById('unit').value,
+      price:       document.getElementById('price').value,
+      stockType:   stockType
+    };
+
+    if (!body.itemName || !body.quantity || !body.price) {
+      showAlert('alert', 'Fill all required fields');
+      return;
+    }
+
+    const data = await apiFetch('/inventory/' + id, 'PUT', body);
+    if (data._id) {
+      showAlert('alert', 'Item updated!', 'success');
+      setTimeout(() => goBack(), 1500);
+    } else {
+      showAlert('alert', data.message || 'Update failed');
+    }
+  }
+
+  loadItem();
+</script>
+</body>
+</html>

@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Add Godown Item</title>
+  <link rel="stylesheet" href="../css/style.css"/>
+</head>
+<body>
+<div class="layout">
+  <aside class="sidebar" id="sidebar"></aside>
+  <div class="main-content">
+    <div class="topbar">
+      <button class="hamburger" onclick="toggleSidebar()">☰</button>
+      <h2>🏭 Add Godown Item</h2>
+    </div>
+    <div class="section-card">
+      <div id="alert" class="alert" style="display:none"></div>
+      <div class="form-group">
+        <label>Item Name</label>
+        <input type="text" id="itemName" placeholder="e.g. Sugar"/>
+      </div>
+      <div class="form-group">
+        <label>Category</label>
+        <select id="category" onchange="loadSubCats()">
+          <option value="">Select Category</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label>Sub Category</label>
+        <select id="subCategory">
+          <option value="">Select Sub Category</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label>Quantity</label>
+        <input type="number" id="quantity" placeholder="e.g. 100"/>
+      </div>
+      <div class="form-group">
+        <label>Unit</label>
+        <select id="unit">
+          <option value="kg">kg</option>
+          <option value="liter">liter</option>
+          <option value="packet">packet</option>
+          <option value="box">box</option>
+          <option value="piece">piece</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label>Price (₹)</label>
+        <input type="number" id="price" placeholder="e.g. 2000"/>
+      </div>
+      <button class="btn btn-primary" onclick="addItem()">Add to Godown</button>
+    </div>
+  </div>
+</div>
+<script src="../js/api.js"></script>
+<script src="../js/sidebar.js"></script>
+<script>
+  checkAuth();
+  loadSidebar('add-godown');
+  let categories = [];
+
+  function toggleSidebar() {
+    document.getElementById('sidebar').classList.toggle('open');
+  }
+
+  async function loadCategories() {
+    categories = await apiFetch('/categories') || [];
+    const sel  = document.getElementById('category');
+    categories.forEach(c => {
+      const opt = document.createElement('option');
+      opt.value = c.categoryName;
+      opt.textContent = c.categoryName;
+      sel.appendChild(opt);
+    });
+  }
+
+  function loadSubCats() {
+    const cat = categories.find(c => c.categoryName === document.getElementById('category').value);
+    const sel = document.getElementById('subCategory');
+    sel.innerHTML = '<option value="">Select Sub Category</option>';
+    if (cat) cat.subCategories.forEach(s => {
+      const opt = document.createElement('option');
+      opt.value = s; opt.textContent = s;
+      sel.appendChild(opt);
+    });
+  }
+
+  async function addItem() {
+    const body = {
+      itemName:    document.getElementById('itemName').value,
+      category:    document.getElementById('category').value,
+      subCategory: document.getElementById('subCategory').value,
+      quantity:    document.getElementById('quantity').value,
+      unit:        document.getElementById('unit').value,
+      price:       document.getElementById('price').value,
+      stockType:   'godown'
+    };
+    if (!body.itemName || !body.category || !body.quantity || !body.price)
+      return showAlert('alert', 'Fill all required fields');
+
+    const data = await apiFetch('/inventory', 'POST', body);
+    if (data._id) {
+      showAlert('alert', 'Item added to godown!', 'success');
+    } else {
+      showAlert('alert', data.message || 'Error adding item');
+    }
+  }
+
+  loadCategories();
+</script>
+</body>
+</html>

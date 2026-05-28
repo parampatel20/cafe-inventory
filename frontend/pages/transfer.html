@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Transfer Stock</title>
+  <link rel="stylesheet" href="../css/style.css"/>
+</head>
+<body>
+<div class="layout">
+  <aside class="sidebar" id="sidebar"></aside>
+  <div class="main-content">
+    <div class="topbar">
+      <button class="hamburger" onclick="toggleSidebar()">☰</button>
+      <h2>🔄 Transfer Stock</h2>
+    </div>
+    <div class="section-card">
+      <div id="alert" class="alert" style="display:none"></div>
+      <div id="itemInfo" style="background:#f5f0eb;padding:1rem;border-radius:8px;margin-bottom:1rem;display:none">
+        <p><strong>Item:</strong> <span id="itemName"></span></p>
+        <p><strong>Available in Godown:</strong> <span id="availableQty"></span></p>
+      </div>
+      <div class="form-group">
+        <label>Select Godown Item</label>
+        <select id="itemSelect" onchange="loadItemInfo()">
+          <option value="">Select Item</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label>Quantity to Transfer to Café</label>
+        <input type="number" id="quantity" placeholder="e.g. 10"/>
+      </div>
+      <button class="btn btn-success" onclick="transfer()">Transfer to Café ☕</button>
+    </div>
+
+    <div class="section-card">
+      <h3>Godown Stock Overview</h3>
+      <div class="table-container">
+        <table>
+          <thead><tr><th>Item</th><th>Godown Qty</th><th>Café Qty</th><th>Unit</th></tr></thead>
+          <tbody id="overviewTable"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+<script src="../js/api.js"></script>
+<script src="../js/sidebar.js"></script>
+<script>
+  checkAuth();
+  loadSidebar('transfer');
+  let godownItems = [];
+
+  function toggleSidebar() {
+    document.getElementById('sidebar').classList.toggle('open');
+  }
+
+  async function loadGodownItems() {
+    godownItems = await apiFetch('/inventory?stockType=godown') || [];
+    const sel   = document.getElementById('itemSelect');
+    godownItems.forEach(i => {
+      const opt = document.createElement('option');
+      opt.value = i._id;
+      opt.textContent = `${i.itemName} (${i.quantity} ${i.unit})`;
+      sel.appendChild(opt);
+    });
+
+    // Check if item preselected from godown page
+    const id = new URLSearchParams(window.location.search).get('id');
+    if (id) { sel.value = id; loadItemInfo(); }
+
+    loadOverview();
+  }
+
+  function loadItemInfo() {
+    const id   = document.getElementById('itemSelect').value;
+    const item = godownItems.find(i => i._id === id);
+    if (item) {
+      document.getElementById('itemInfo').style.display = 'block';
+      document.getElementById('itemName').textContent   = item.itemName;
+      document.getElementById('availableQty').textContent = `${item.quantity} ${item.unit}`;
+    }
+  }
+
+  async function loadOverview() {
+    const [godown, cafe] = await Promise.all([
+      apiFetch('/inventory?stockType=godown'),
+      apiFetch('/inventory?stockType=cafe')
+    ]);
+
+    const tbody = document.getElementById('overviewTable');
+    tbody.innerHTML = (godown||[]).map(g => {
+      const c = (cafe||[]).find(c => c.itemName === g.itemName);
+      return `
+        <tr>
+          <td>${g.itemName}</td>
+          <td>${g.quantity} ${g.unit}</td>
+          <td>${c ? c.quantity + ' ' + c.unit : '0'}</td>
+          <td>${g.unit}</td>
+        </tr>
+      `;
+    }).join('') || '<tr><td colspan="4">No godown items</td></tr>';
+  }
+
+  async function transfer() {
+    const id       = document.getElementById('itemSelect').value;
+    const quantity = Number(document.getElementById('quantity').value);
+
+    if (!id)       return showAlert('alert', 'Select an item');
+    if (!quantity) return showAlert('alert', 'Enter quantity');
+
+    const data = await apiFetch(`/inventory/${id}/transfer`, 'POST', { quantity });
+    if (data.message && !data.message.includes('error')) {
+      showAlert('alert', data.message, 'success');
+      setTimeout(() => window.location.reload(), 1500);
+    } else {
+      showAlert('alert', data.message || 'Transfer failed');
+    }
+  }
+
+  loadGodownItems();
+</script>
+</body>
+</html>

@@ -1,0 +1,204 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Dashboard</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    :root { --primary: #6F4E37; --secondary: #C8A97E; --bg: #F5F0EB; --white: #ffffff; --danger: #e74c3c; --success: #27ae60; --text: #333; --border: #ddd; }
+    body { font-family: 'Segoe UI', sans-serif; background: var(--bg); }
+    .layout { display: flex; min-height: 100vh; }
+    .sidebar { width: 240px; background: var(--primary); color: #fff; padding: 1.5rem 0; position: fixed; height: 100vh; overflow-y: auto; }
+    .sidebar-logo { text-align: center; font-size: 1.2rem; font-weight: bold; padding: 0 1rem 1.5rem; border-bottom: 1px solid rgba(255,255,255,0.2); }
+    .sidebar-menu { list-style: none; margin-top: 1rem; }
+    .sidebar-menu li a { display: block; padding: 0.8rem 1.5rem; color: rgba(255,255,255,0.85); text-decoration: none; transition: 0.2s; }
+    .sidebar-menu li a:hover, .sidebar-menu li a.active { background: rgba(255,255,255,0.15); color: #fff; }
+    .main-content { margin-left: 240px; padding: 1.5rem; width: 100%; }
+    .topbar { display: flex; justify-content: space-between; align-items: center; background: var(--white); padding: 1rem 1.5rem; border-radius: 10px; margin-bottom: 1.5rem; box-shadow: 0 2px 8px rgba(0,0,0,0.05); }
+    .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 1rem; margin-bottom: 1.5rem; }
+    .stat-card { background: var(--white); padding: 1.2rem; border-radius: 10px; text-align: center; box-shadow: 0 2px 8px rgba(0,0,0,0.05); border-top: 3px solid var(--secondary); }
+    .stat-card h3 { font-size: 1.8rem; color: var(--primary); }
+    .stat-card p { color: #888; font-size: 0.85rem; margin-top: 0.3rem; }
+    .stat-card.cafe   { border-top-color: #27ae60; }
+    .stat-card.godown { border-top-color: #e67e22; }
+    .stat-card.bills  { border-top-color: #3498db; }
+    .stat-card.staff  { border-top-color: #9b59b6; }
+    .section-card { background: var(--white); border-radius: 10px; padding: 1.5rem; box-shadow: 0 2px 8px rgba(0,0,0,0.05); margin-bottom: 1.5rem; }
+    .section-card h3 { color: var(--primary); margin-bottom: 1rem; font-size: 1rem; }
+    .two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 1.5rem; }
+    table { width: 100%; border-collapse: collapse; }
+    th, td { padding: 0.7rem 1rem; text-align: left; border-bottom: 1px solid var(--border); font-size: 0.85rem; }
+    th { background: var(--bg); color: var(--primary); font-weight: 700; }
+    tr:hover td { background: #fdf8f4; }
+    .hamburger { display: none; font-size: 1.5rem; cursor: pointer; background: none; border: none; color: var(--primary); }
+    @media (max-width: 768px) {
+      .sidebar { transform: translateX(-100%); transition: 0.3s; z-index: 1000; }
+      .sidebar.open { transform: translateX(0); }
+      .main-content { margin-left: 0; }
+      .hamburger { display: block; }
+      .two-col { grid-template-columns: 1fr; }
+      .stats-grid { grid-template-columns: repeat(2, 1fr); }
+    }
+  </style>
+</head>
+<body>
+<div class="layout">
+  <aside class="sidebar" id="sidebar">
+    <div class="sidebar-logo">☕ Café Inventory</div>
+    <ul class="sidebar-menu" id="sidebarMenu"></ul>
+  </aside>
+  <div class="main-content">
+    <div class="topbar">
+      <button class="hamburger" onclick="document.getElementById('sidebar').classList.toggle('open')">☰</button>
+      <h2>Dashboard</h2>
+      <span id="username" style="color:var(--primary);font-weight:600"></span>
+    </div>
+
+    <div class="stats-grid" id="statsGrid"></div>
+
+    <div class="two-col">
+      <div class="section-card">
+        <h3>☕ Recent Café Stock</h3>
+        <table>
+          <thead><tr><th>Item</th><th>Qty</th><th>Price</th></tr></thead>
+          <tbody id="cafeTable"></tbody>
+        </table>
+      </div>
+      <div class="section-card">
+        <h3>🏭 Recent Godown Stock</h3>
+        <table>
+          <thead><tr><th>Item</th><th>Qty</th><th>Price</th></tr></thead>
+          <tbody id="godownTable"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <div class="section-card">
+      <h3>🧾 Recent Bills</h3>
+      <table>
+        <thead><tr><th>Bill No</th><th>Supplier</th><th>Amount</th><th>Date</th></tr></thead>
+        <tbody id="billsTable"></tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<script>
+  const API = 'http://localhost:5001/api';
+  function getToken() { return localStorage.getItem('token'); }
+  function getUser()  { return JSON.parse(localStorage.getItem('user') || '{}'); }
+
+  if (!getToken()) window.location.replace('http://localhost:3000/index.html');
+
+  const user    = getUser();
+  const isAdmin = user.role === 'admin';
+  document.getElementById('username').textContent = user.name || '';
+
+  // Build sidebar
+  let adminLinks = '';
+  if (isAdmin) {
+    adminLinks = `
+      <li><a href="/pages/categories.html">📂 Categories</a></li>
+      <li><a href="/pages/staff.html">👥 Staff</a></li>
+    `;
+  }
+
+  document.getElementById('sidebarMenu').innerHTML = `
+  <li><a href="/pages/dashboard.html"   class="active">🏠 Dashboard</a></li>
+  <li><a href="/pages/inventory.html">☕ Café Stock</a></li>
+  <li><a href="/pages/add-item.html">➕ Add Café Item</a></li>
+  <li><a href="/pages/godown.html">🏭 Godown Stock</a></li>
+  <li><a href="/pages/add-godown.html">➕ Add Godown Item</a></li>
+  <li><a href="/pages/transfer.html">🔄 Transfer Stock</a></li>
+  <li><a href="/pages/bills.html">🧾 Bills</a></li>
+  <li><a href="/pages/upload-bill.html">📤 Upload Bill</a></li>
+  <li><a href="/pages/categories.html">📂 Categories</a></li>
+  ${isAdmin ? '<li><a href="/pages/staff.html">👥 Staff</a></li>' : ''}
+  <li><a href="#" onclick="logout()">🚪 Logout</a></li>
+`;
+
+  function logout() {
+    localStorage.removeItem('token');
+    localStorage.removeItem('user');
+    window.location.replace('http://localhost:3000/index.html');
+  }
+
+  async function apiFetch(endpoint) {
+    try {
+      const res = await fetch(API + endpoint, {
+        headers: { Authorization: 'Bearer ' + getToken() }
+      });
+      return res.json();
+    } catch (err) {
+      return [];
+    }
+  }
+
+  async function loadDashboard() {
+    const [cafeItems, godownItems, bills] = await Promise.all([
+      apiFetch('/inventory?stockType=cafe'),
+      apiFetch('/inventory?stockType=godown'),
+      apiFetch('/bills')
+    ]);
+
+    // Build stats based on role
+let statsHtml = `
+  <div class="stat-card cafe">
+    <h3>${cafeItems.length || 0}</h3>
+    <p>☕ Café Stock Items</p>
+  </div>
+  <div class="stat-card godown">
+    <h3>${godownItems.length || 0}</h3>
+    <p>🏭 Godown Stock Items</p>
+  </div>
+  <div class="stat-card bills">
+    <h3>${bills.length || 0}</h3>
+    <p>🧾 Total Bills</p>
+  </div>
+`;
+
+if (isAdmin) {
+  const cafeVal   = (cafeItems  ||[]).reduce((s,i)=>s+(i.price*i.quantity),0);
+  const godownVal = (godownItems||[]).reduce((s,i)=>s+(i.price*i.quantity),0);
+  const staff     = await apiFetch('/staff');
+  statsHtml += `
+    <div class="stat-card staff">
+      <h3>${staff.length || 0}</h3>
+      <p>👥 Staff Members</p>
+    </div>
+    <div class="stat-card" style="border-top-color:#e74c3c">
+      <h3>₹${cafeVal.toLocaleString()}</h3>
+      <p>💰 Café Stock Value</p>
+    </div>
+    <div class="stat-card" style="border-top-color:#e67e22">
+      <h3>₹${godownVal.toLocaleString()}</h3>
+      <p>💰 Godown Stock Value</p>
+    </div>
+  `;
+}
+document.getElementById('statsGrid').innerHTML = statsHtml;
+
+    // Cafe table
+    const cafeRecent = (cafeItems || []).slice(-5).reverse();
+    document.getElementById('cafeTable').innerHTML = cafeRecent.length
+      ? cafeRecent.map(i => '<tr><td>' + i.itemName + '</td><td>' + i.quantity + ' ' + i.unit + '</td><td>₹' + i.price + '</td></tr>').join('')
+      : '<tr><td colspan="3" style="color:#888">No café items yet</td></tr>';
+
+    // Godown table
+    const godownRecent = (godownItems || []).slice(-5).reverse();
+    document.getElementById('godownTable').innerHTML = godownRecent.length
+      ? godownRecent.map(i => '<tr><td>' + i.itemName + '</td><td>' + i.quantity + ' ' + i.unit + '</td><td>₹' + i.price + '</td></tr>').join('')
+      : '<tr><td colspan="3" style="color:#888">No godown items yet</td></tr>';
+
+    // Bills table
+    const recentBills = (bills || []).slice(-5).reverse();
+    document.getElementById('billsTable').innerHTML = recentBills.length
+      ? recentBills.map(b => '<tr><td>' + b.billNumber + '</td><td>' + b.supplierName + '</td><td>₹' + b.totalAmount + '</td><td>' + new Date(b.billDate).toLocaleDateString() + '</td></tr>').join('')
+      : '<tr><td colspan="4" style="color:#888">No bills yet</td></tr>';
+  }
+
+  loadDashboard();
+</script>
+</body>
+</html>
