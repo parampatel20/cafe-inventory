@@ -56,16 +56,24 @@
   }
 
   async function loadCategories() {
-    const cats  = await apiFetch('/api/categories');
-    const tbody = document.getElementById('catTable');
-    tbody.innerHTML = (cats || []).map(c => `
-      <tr>
-        <td>${c.categoryName}</td>
-        <td>${(c.subCategories || []).join(', ')}</td>
-        <td>${isAdmin ? `<button class="btn btn-danger btn-sm" onclick="deleteCategory('${c._id}')">Delete</button>` : ''}</td>
-      </tr>
-    `).join('') || '<tr><td colspan="3">No categories yet</td></tr>';
-  }
+  const cats = await apiFetch("/api/categories");
+
+  console.log("Categories response:", cats);
+
+  const categoryList = Array.isArray(cats)
+    ? cats
+    : cats.categories || cats.data || [];
+
+  document.getElementById("categoryList").innerHTML = categoryList.map(cat => `
+    <tr>
+      <td>${cat.name || cat.categoryName || ""}</td>
+      <td>${cat.type || cat.stockType || ""}</td>
+      <td>
+        <button onclick="deleteCategory('${cat._id}')">Delete</button>
+      </td>
+    </tr>
+  `).join("");
+}
 
   async function addCategory() {
     const categoryName  = document.getElementById('categoryName').value.trim();
