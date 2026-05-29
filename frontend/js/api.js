@@ -1,6 +1,6 @@
-const API_BASE = "https://cafe-inventory-18mx.onrender.com";
-const API      = API_BASE + '/api';
-const APP = window.location.origin;
+const API_BASE = 'https://cafe-inventory-18mx.onrender.com';
+const API      = API_BASE;
+const APP      = window.location.origin;
 
 function getToken() { return localStorage.getItem('token'); }
 function getUser()  { return JSON.parse(localStorage.getItem('user') || '{}'); }
@@ -41,7 +41,7 @@ function checkAdmin() {
 function showAlert(id, message, type = 'error') {
   const el = document.getElementById(id);
   if (!el) return;
-  el.className = `alert alert-${type}`;
+  el.className = 'alert alert-' + type;
   el.textContent = message;
   el.style.display = 'block';
   setTimeout(() => el.style.display = 'none', 3000);
