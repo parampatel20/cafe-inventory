@@ -56,33 +56,31 @@
   }
 
   async function loadCategories() {
-  try {
-    const cats = await apiFetch("/api/categories");
+  const cats  = await apiFetch('/api/categories');
+  console.log('Categories response:', cats);
+  const tbody = document.getElementById('catTable');
 
-    console.log("Categories response:", cats);
+  if (!cats || cats.length === 0) {
+    tbody.innerHTML = '<tr><td colspan="3">No categories yet</td></tr>';
+    return;
+  }
 
-    const categoryList = Array.isArray(cats)
-      ? cats
-      : cats.categories || cats.data || [];
-
-    const categoryListElement = document.getElementById("categoryList");
-
-    if (!categoryListElement) {
-      console.error("Element with id='categoryList' not found in HTML");
-      return;
+  let html = '';
+  cats.forEach(c => {
+    const subs = Array.isArray(c.subCategories) ? c.subCategories.join(', ') : '';
+    html += '<tr>';
+    html += '<td>' + c.categoryName + '</td>';
+    html += '<td>' + subs + '</td>';
+    html += '<td>';
+    if (isAdmin) {
+      html += '<button class="btn btn-danger btn-sm" onclick="deleteCategory(\'' + c._id + '\')">Delete</button>';
     }
-
-    categoryListElement.innerHTML = categoryList.map(cat => `
-      <tr>
-        <td>${cat.name || cat.categoryName || ""}</td>
-        <td>${cat.type || cat.stockType || ""}</td>
-        <td>
-          <button onclick="deleteCategory('${cat._id}')">Delete</button>
-        </td>
-      </tr>
-    `).join("");
-
-  } catch (error) {
+    html += '</td>';
+    html += '</tr>';
+  });
+  tbody.innerHTML = html;
+}
+  catch (error) {
     console.error("Failed to load categories:", error.message);
   }
 }
