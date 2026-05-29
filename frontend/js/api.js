@@ -1,5 +1,5 @@
 const API_BASE = 'https://cafe-inventory-18mx.onrender.com';
-const API      = API_BASE;
+const API      = API_BASE + '/api';
 const APP      = window.location.origin;
 
 function getToken() { return localStorage.getItem('token'); }
