@@ -11,7 +11,7 @@
   <aside class="sidebar" id="sidebar"></aside>
   <div class="main-content">
     <div class="topbar">
-      <button class="hamburger" onclick="toggleSidebar()">☰</button>
+      <button class="hamburger" onclick="document.getElementById('sidebar').classList.toggle('open')">☰</button>
       <h2>Staff Management</h2>
     </div>
     <div class="section-card">
@@ -41,7 +41,9 @@
       <h3>All Staff</h3>
       <div class="table-container">
         <table>
-          <thead><tr><th>Name</th><th>Email</th><th>Status</th><th>Actions</th></tr></thead>
+          <thead>
+            <tr><th>Name</th><th>Email</th><th>Status</th><th>Actions</th></tr>
+          </thead>
           <tbody id="staffTable"></tbody>
         </table>
       </div>
@@ -55,58 +57,72 @@
   checkAdmin();
   loadSidebar('staff');
 
-  function toggleSidebar() {
-    document.getElementById('sidebar').classList.toggle('open');
-  }
-
   async function loadStaff() {
-    const staff = await apiFetch('/staff');
-    const tbody = document.getElementById('staffTable');
-    tbody.innerHTML = (staff || []).map(s => `
-      <tr>
-        <td>${s.name}</td>
-        <td>${s.email}</td>
-        <td>${s.isActive ? '✅ Active' : '🚫 Disabled'}</td>
-        <td>
-          <button class="btn btn-secondary btn-sm" onclick="disableStaff('${s._id}')">Disable</button>
-          <button class="btn btn-danger btn-sm"    onclick="removeStaff('${s._id}')">Remove</button>
-        </td>
-      </tr>
-    `).join('');
+    var staff = await apiFetch('/staff');
+    var tbody = document.getElementById('staffTable');
+
+    if (!staff || staff.length === 0) {
+      tbody.innerHTML = '<tr><td colspan="4">No staff yet</td></tr>';
+      return;
+    }
+
+    var html = '';
+    staff.forEach(function(s) {
+      html += '<tr>';
+      html += '<td>' + s.name + '</td>';
+      html += '<td>' + s.email + '</td>';
+      html += '<td>' + (s.isActive ? '✅ Active' : '🚫 Disabled') + '</td>';
+      html += '<td>';
+      html += '<button class="btn btn-secondary btn-sm" onclick="disableStaff(\'' + s._id + '\')">Disable</button> ';
+      html += '<button class="btn btn-danger btn-sm" onclick="removeStaff(\'' + s._id + '\')">Remove</button>';
+      html += '</td>';
+      html += '</tr>';
+    });
+    tbody.innerHTML = html;
   }
 
   async function addStaff() {
-    const body = {
-      name:     document.getElementById('name').value,
-      email:    document.getElementById('email').value,
-      password: document.getElementById('password').value,
+    var name     = document.getElementById('name').value;
+    var email    = document.getElementById('email').value;
+    var password = document.getElementById('password').value;
+
+    if (!name || !email || !password) {
+      showAlert('alert', 'Fill all fields');
+      return;
+    }
+
+    var body = {
+      name:     name,
+      email:    email,
+      password: password,
       permissions: {
         canUploadBills:   document.getElementById('canUploadBills').checked,
         canAddInventory:  document.getElementById('canAddInventory').checked,
         canViewInventory: document.getElementById('canViewInventory').checked
       }
     };
-    if (!body.name || !body.email || !body.password)
-      return showAlert('alert', 'Fill all fields');
 
-    const data = await apiFetch('/api/staff', 'POST', body);
-    if (data.id) {
+    var data = await apiFetch('/staff', 'POST', body);
+    if (data._id || data.id) {
       showAlert('alert', 'Staff added!', 'success');
+      document.getElementById('name').value     = '';
+      document.getElementById('email').value    = '';
+      document.getElementById('password').value = '';
       loadStaff();
     } else {
-      showAlert('alert', data.message || 'Error');
+      showAlert('alert', data.message || 'Error adding staff');
     }
   }
 
   async function disableStaff(id) {
     if (!confirm('Disable this staff?')) return;
-    await apiFetch(`/api/staff/${id}/disable`, 'PATCH');
+    await apiFetch('/staff/' + id + '/disable', 'PATCH');
     loadStaff();
   }
 
   async function removeStaff(id) {
     if (!confirm('Remove this staff permanently?')) return;
-    await apiFetch(`/staff/${id}`, 'DELETE');
+    await apiFetch('/staff/' + id, 'DELETE');
     loadStaff();
   }
 
