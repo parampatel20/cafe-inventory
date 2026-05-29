@@ -9,9 +9,13 @@ require('dotenv').config();
 
 const app = express();
 
-app.use(cors());
-app.use(express.json());
-app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
+app.use(cors({
+  origin: [
+    'https://cafe-inventory-omega.vercel.app',
+    'http://localhost:3000'
+  ],
+  credentials: true
+}));
 
 // Routes
 app.use('/api/auth',       require('./routes/auth'));
