@@ -3,15 +3,20 @@ const Bill = require('../models/Bill');
 exports.uploadBill = async (req, res) => {
   try {
     const { billNumber, supplierName, billDate, totalAmount, category } = req.body;
-    const billFile = req.file ? req.file.filename : null;
+    const billFile = req.file ? req.file.path : null;
 
     const bill = await Bill.create({
-      billNumber, supplierName, billDate,
-      totalAmount, category, billFile,
+      billNumber,
+      supplierName,
+      billDate,
+      totalAmount,
+      category,
+      billFile,
       uploadedBy: req.user._id
     });
     res.status(201).json(bill);
   } catch (err) {
+    console.error('Bill upload error:', err.message);
     res.status(500).json({ message: err.message });
   }
 };
