@@ -4,26 +4,23 @@ exports.addCategory = async (req, res) => {
   try {
     const { categoryName, subCategories } = req.body;
 
-    // Check if category already exists
-    const existing = await Category.findOne({ categoryName });
+    const results = [];
+    for (let i = 0; i < subCategories.length; i++) {
+      const sub = subCategories[i].trim();
+      if (!sub) continue;
 
-    if (existing) {
-      // Add new sub categories to existing ones without duplicates
-      const newSubs = subCategories.filter(function(s) {
-        return !existing.subCategories.includes(s);
-      });
-      existing.subCategories = existing.subCategories.concat(newSubs);
-      await existing.save();
-      return res.status(200).json(existing);
+      const existing = await Category.findOne({ categoryName, subCategories: sub });
+      if (!existing) {
+        const cat = await Category.create({
+          categoryName,
+          subCategories: [sub],
+          createdBy: req.user._id
+        });
+        results.push(cat);
+      }
     }
 
-    // Create new category
-    const category = await Category.create({
-      categoryName,
-      subCategories,
-      createdBy: req.user._id
-    });
-    res.status(201).json(category);
+    res.status(201).json(results[0] || { message: 'Already exists' });
   } catch (err) {
     res.status(500).json({ message: err.message });
   }
