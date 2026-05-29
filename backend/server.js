@@ -10,10 +10,17 @@ require('dotenv').config();
 const app = express();
 
 app.use(cors({
-  origin: [
-    'https://cafe-inventory-omega.vercel.app',
-    'http://localhost:3000'
-  ],
+  origin: function(origin, callback) {
+    const allowed = [
+      'https://cafe-inventory-omega.vercel.app',
+      'http://localhost:3000'
+    ];
+    if (!origin || allowed.indexOf(origin) !== -1 || origin.endsWith('.vercel.app')) {
+      callback(null, true);
+    } else {
+      callback(new Error('Not allowed by CORS'));
+    }
+  },
   credentials: true
 }));
 
