@@ -89,39 +89,30 @@
   function getToken() { return localStorage.getItem('token'); }
   function getUser()  { return JSON.parse(localStorage.getItem('user') || '{}'); }
 
-  if (!getToken()) window.location.replace('http://localhost:3000/index.html');
+  if (!getToken()) window.location.replace(window.location.origin + '/index.html');
 
   const user    = getUser();
   const isAdmin = user.role === 'admin';
   document.getElementById('username').textContent = user.name || '';
 
-  // Build sidebar
-  let adminLinks = '';
-  if (isAdmin) {
-    adminLinks = `
-      <li><a href="/pages/categories.html">📂 Categories</a></li>
-      <li><a href="/pages/staff.html">👥 Staff</a></li>
-    `;
-  }
-
   document.getElementById('sidebarMenu').innerHTML = `
-  <li><a href="/pages/dashboard.html"   class="active">🏠 Dashboard</a></li>
-  <li><a href="/pages/inventory.html">☕ Café Stock</a></li>
-  <li><a href="/pages/add-item.html">➕ Add Café Item</a></li>
-  <li><a href="/pages/godown.html">🏭 Godown Stock</a></li>
-  <li><a href="/pages/add-godown.html">➕ Add Godown Item</a></li>
-  <li><a href="/pages/transfer.html">🔄 Transfer Stock</a></li>
-  <li><a href="/pages/bills.html">🧾 Bills</a></li>
-  <li><a href="/pages/upload-bill.html">📤 Upload Bill</a></li>
-  <li><a href="/pages/categories.html">📂 Categories</a></li>
-  ${isAdmin ? '<li><a href="/pages/staff.html">👥 Staff</a></li>' : ''}
-  <li><a href="#" onclick="logout()">🚪 Logout</a></li>
-`;
+    <li><a href="/pages/dashboard.html" class="active">🏠 Dashboard</a></li>
+    <li><a href="/pages/inventory.html">☕ Café Stock</a></li>
+    <li><a href="/pages/add-item.html">➕ Add Café Item</a></li>
+    <li><a href="/pages/godown.html">🏭 Godown Stock</a></li>
+    <li><a href="/pages/add-godown.html">➕ Add Godown Item</a></li>
+    <li><a href="/pages/transfer.html">🔄 Transfer Stock</a></li>
+    <li><a href="/pages/bills.html">🧾 Bills</a></li>
+    <li><a href="/pages/upload-bill.html">📤 Upload Bill</a></li>
+    <li><a href="/pages/categories.html">📂 Categories</a></li>
+    ${isAdmin ? '<li><a href="/pages/staff.html">👥 Staff</a></li>' : ''}
+    <li><a href="#" onclick="logout()">🚪 Logout</a></li>
+  `;
 
   function logout() {
     localStorage.removeItem('token');
     localStorage.removeItem('user');
-    window.location.replace('http://localhost:3000/index.html');
+    window.location.replace(window.location.origin + '/index.html');
   }
 
   async function apiFetch(endpoint) {
@@ -142,56 +133,53 @@
       apiFetch('/bills')
     ]);
 
-    // Build stats based on role
-let statsHtml = `
-  <div class="stat-card cafe">
-    <h3>${cafeItems.length || 0}</h3>
-    <p>☕ Café Stock Items</p>
-  </div>
-  <div class="stat-card godown">
-    <h3>${godownItems.length || 0}</h3>
-    <p>🏭 Godown Stock Items</p>
-  </div>
-  <div class="stat-card bills">
-    <h3>${bills.length || 0}</h3>
-    <p>🧾 Total Bills</p>
-  </div>
-`;
+    let statsHtml = `
+      <div class="stat-card cafe">
+        <h3>${cafeItems.length || 0}</h3>
+        <p>☕ Café Stock Items</p>
+      </div>
+      <div class="stat-card godown">
+        <h3>${godownItems.length || 0}</h3>
+        <p>🏭 Godown Stock Items</p>
+      </div>
+      <div class="stat-card bills">
+        <h3>${bills.length || 0}</h3>
+        <p>🧾 Total Bills</p>
+      </div>
+    `;
 
-if (isAdmin) {
-  const cafeVal   = (cafeItems  ||[]).reduce((s,i)=>s+(i.price*i.quantity),0);
-  const godownVal = (godownItems||[]).reduce((s,i)=>s+(i.price*i.quantity),0);
-  const staff     = await apiFetch('/staff');
-  statsHtml += `
-    <div class="stat-card staff">
-      <h3>${staff.length || 0}</h3>
-      <p>👥 Staff Members</p>
-    </div>
-    <div class="stat-card" style="border-top-color:#e74c3c">
-      <h3>₹${cafeVal.toLocaleString()}</h3>
-      <p>💰 Café Stock Value</p>
-    </div>
-    <div class="stat-card" style="border-top-color:#e67e22">
-      <h3>₹${godownVal.toLocaleString()}</h3>
-      <p>💰 Godown Stock Value</p>
-    </div>
-  `;
-}
-document.getElementById('statsGrid').innerHTML = statsHtml;
+    if (isAdmin) {
+      const cafeVal   = (cafeItems  ||[]).reduce((s,i) => s+(i.price*i.quantity), 0);
+      const godownVal = (godownItems||[]).reduce((s,i) => s+(i.price*i.quantity), 0);
+      const staff     = await apiFetch('/staff');
+      statsHtml += `
+        <div class="stat-card staff">
+          <h3>${staff.length || 0}</h3>
+          <p>👥 Staff Members</p>
+        </div>
+        <div class="stat-card" style="border-top-color:#e74c3c">
+          <h3>₹${cafeVal.toLocaleString()}</h3>
+          <p>💰 Café Stock Value</p>
+        </div>
+        <div class="stat-card" style="border-top-color:#e67e22">
+          <h3>₹${godownVal.toLocaleString()}</h3>
+          <p>💰 Godown Stock Value</p>
+        </div>
+      `;
+    }
 
-    // Cafe table
+    document.getElementById('statsGrid').innerHTML = statsHtml;
+
     const cafeRecent = (cafeItems || []).slice(-5).reverse();
     document.getElementById('cafeTable').innerHTML = cafeRecent.length
       ? cafeRecent.map(i => '<tr><td>' + i.itemName + '</td><td>' + i.quantity + ' ' + i.unit + '</td><td>₹' + i.price + '</td></tr>').join('')
       : '<tr><td colspan="3" style="color:#888">No café items yet</td></tr>';
 
-    // Godown table
     const godownRecent = (godownItems || []).slice(-5).reverse();
     document.getElementById('godownTable').innerHTML = godownRecent.length
       ? godownRecent.map(i => '<tr><td>' + i.itemName + '</td><td>' + i.quantity + ' ' + i.unit + '</td><td>₹' + i.price + '</td></tr>').join('')
       : '<tr><td colspan="3" style="color:#888">No godown items yet</td></tr>';
 
-    // Bills table
     const recentBills = (bills || []).slice(-5).reverse();
     document.getElementById('billsTable').innerHTML = recentBills.length
       ? recentBills.map(b => '<tr><td>' + b.billNumber + '</td><td>' + b.supplierName + '</td><td>₹' + b.totalAmount + '</td><td>' + new Date(b.billDate).toLocaleDateString() + '</td></tr>').join('')
