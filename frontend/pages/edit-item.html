@@ -84,17 +84,16 @@
     document.getElementById('price').value       = item.price       || '';
     document.getElementById('unit').value        = item.unit        || 'kg';
 
-    const cats = await apiFetch('/categories');
-    const sel  = document.getElementById('category');
-    sel.innerHTML = '';
-    (cats || []).forEach(c => {
-      const opt = document.createElement('option');
-      opt.value = c.categoryName;
-      opt.textContent = c.categoryName;
-      if (c.categoryName === item.category) opt.selected = true;
-      sel.appendChild(opt);
-    });
-  }
+const hardcodedCats = ['Kitchen', 'Bar', 'Takeaway', 'Crockery'];
+const sel = document.getElementById('category');
+sel.innerHTML = '';
+hardcodedCats.forEach(function(c) {
+  var opt = document.createElement('option');
+  opt.value = c;
+  opt.textContent = c;
+  if (c === item.category) opt.selected = true;
+  sel.appendChild(opt);
+});
 
   async function updateItem() {
     const body = {
