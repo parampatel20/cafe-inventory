@@ -57,15 +57,15 @@
   }
 
   async function loadCategories() {
-    const cats = await apiFetch('/categories');
-    const sel  = document.getElementById('category');
-    (cats || []).forEach(c => {
-      const opt = document.createElement('option');
-      opt.value = c.categoryName;
-      opt.textContent = c.categoryName;
-      sel.appendChild(opt);
-    });
-  }
+  const sel = document.getElementById('category');
+  sel.innerHTML = '<option value="">Select Category</option>';
+  ['Kitchen', 'Bar', 'Takeaway', 'Crockery'].forEach(function(c) {
+    var opt = document.createElement('option');
+    opt.value = c;
+    opt.textContent = c;
+    sel.appendChild(opt);
+  });
+}
 
   async function uploadBill() {
     const formData = new FormData();
