@@ -1,15 +1,20 @@
+const cloudinary = require('cloudinary').v2;
+const { CloudinaryStorage } = require('multer-storage-cloudinary');
 const multer = require('multer');
-const path = require('path');
 
-const storage = multer.diskStorage({
-  destination: (req, file, cb) => cb(null, 'uploads/'),
-  filename:    (req, file, cb) => cb(null, Date.now() + path.extname(file.originalname))
+cloudinary.config({
+  cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
+  api_key:    process.env.CLOUDINARY_API_KEY,
+  api_secret: process.env.CLOUDINARY_API_SECRET
 });
 
-const fileFilter = (req, file, cb) => {
-  const allowed = /jpeg|jpg|png|pdf/;
-  const ext = allowed.test(path.extname(file.originalname).toLowerCase());
-  ext ? cb(null, true) : cb(new Error('Only images and PDFs allowed'));
-};
+const storage = new CloudinaryStorage({
+  cloudinary,
+  params: {
+    folder:         'cafe-inventory-bills',
+    allowed_formats: ['jpg', 'jpeg', 'png', 'pdf'],
+    resource_type:  'auto'
+  }
+});
 
-module.exports = multer({ storage, fileFilter });
+module.exports = multer({ storage });
