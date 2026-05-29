@@ -60,7 +60,7 @@
   }
 
   async function loadStaff() {
-    const staff = await apiFetch('/api/staff');
+    const staff = await apiFetch('/staff');
     const tbody = document.getElementById('staffTable');
     tbody.innerHTML = (staff || []).map(s => `
       <tr>
@@ -106,7 +106,7 @@
 
   async function removeStaff(id) {
     if (!confirm('Remove this staff permanently?')) return;
-    await apiFetch(`/api/staff/${id}`, 'DELETE');
+    await apiFetch(`/staff/${id}`, 'DELETE');
     loadStaff();
   }
 
