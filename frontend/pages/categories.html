@@ -56,7 +56,7 @@
   }
 
   async function loadCategories() {
-  const cats  = await apiFetch('/api/categories');
+  const cats  = await apiFetch('/categories');
   console.log('Categories response:', cats);
   const tbody = document.getElementById('catTable');
 
@@ -105,7 +105,7 @@
 
   async function deleteCategory(id) {
     if (!confirm('Delete this category?')) return;
-    await apiFetch('/api/categories/' + id, 'DELETE');
+    await apiFetch('/categories/' + id, 'DELETE');
     loadCategories();
   }
 
