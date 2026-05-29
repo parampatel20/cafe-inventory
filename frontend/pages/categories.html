@@ -28,8 +28,8 @@
         </select>
       </div>
       <div class="form-group">
-        <label>Sub Categories (comma separated)</label>
-        <input type="text" id="subCategories" placeholder="e.g. Pasta, Sauce, Cheese"/>
+        <label>Sub Category Name</label>
+        <input type="text" id="subCategory" placeholder="e.g. Pasta"/>
       </div>
       <button class="btn btn-primary" onclick="addCategory()">Save</button>
     </div>
@@ -39,8 +39,8 @@
         <table>
           <thead>
             <tr>
-              <th>Name</th>
-              <th>Sub Categories</th>
+              <th>Category</th>
+              <th>Sub Category</th>
               <th id="actionHeader">Actions</th>
             </tr>
           </thead>
@@ -72,10 +72,10 @@
 
     var html = '';
     cats.forEach(function(c) {
-      var subs = Array.isArray(c.subCategories) ? c.subCategories.join(', ') : '';
+      var sub = Array.isArray(c.subCategories) ? c.subCategories[0] : '';
       html += '<tr>';
       html += '<td><strong>' + c.categoryName + '</strong></td>';
-      html += '<td>' + subs + '</td>';
+      html += '<td>' + sub + '</td>';
       html += '<td>';
       if (isAdmin) {
         html += '<button class="btn btn-danger btn-sm" onclick="deleteCategory(\'' + c._id + '\')">Delete</button>';
@@ -87,32 +87,35 @@
   }
 
   async function addCategory() {
-    var categoryName  = document.getElementById('categoryName').value;
-    var subCategories = document.getElementById('subCategories').value
-      .split(',').map(function(s) { return s.trim(); }).filter(Boolean);
+    var categoryName = document.getElementById('categoryName').value;
+    var subCategory  = document.getElementById('subCategory').value.trim();
 
     if (!categoryName) {
       showAlert('alert', 'Select a category');
       return;
     }
-    if (subCategories.length === 0) {
-      showAlert('alert', 'Enter at least one sub category');
+    if (!subCategory) {
+      showAlert('alert', 'Enter sub category name');
       return;
     }
 
-    var data = await apiFetch('/categories', 'POST', { categoryName: categoryName, subCategories: subCategories });
+    var data = await apiFetch('/categories', 'POST', {
+      categoryName:  categoryName,
+      subCategories: [subCategory]
+    });
+
     if (data._id) {
-      showAlert('alert', 'Category saved!', 'success');
-      document.getElementById('categoryName').value  = '';
-      document.getElementById('subCategories').value = '';
+      showAlert('alert', 'Sub category added!', 'success');
+      document.getElementById('categoryName').value = '';
+      document.getElementById('subCategory').value  = '';
       loadCategories();
     } else {
-      showAlert('alert', data.message || 'Error saving category');
+      showAlert('alert', data.message || 'Error');
     }
   }
 
   async function deleteCategory(id) {
-    if (!confirm('Delete this category?')) return;
+    if (!confirm('Delete this sub category?')) return;
     await apiFetch('/categories/' + id, 'DELETE');
     loadCategories();
   }
