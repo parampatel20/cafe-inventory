@@ -47,7 +47,7 @@
   }
 
   async function loadCategories() {
-    const cats = await apiFetch('/api/categories');
+    const cats = await apiFetch('/categories');
     const sel  = document.getElementById('filterCat');
     (cats || []).forEach(c => {
       const opt = document.createElement('option');
@@ -87,7 +87,7 @@
 
   async function deleteBill(id) {
     if (!confirm('Delete this bill?')) return;
-    await apiFetch(`/api/bills/${id}`, 'DELETE');
+    await apiFetch(`/bills/${id}`, 'DELETE');
     loadBills();
   }
 
