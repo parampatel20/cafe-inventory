@@ -38,7 +38,7 @@
               <th id="actionHeader">Actions</th>
             </tr>
           </thead>
-          <tbody id="categoryList"></tbody>
+          <tbody id="catTable"></tbody>
         </table>
       </div>
     </div>
@@ -56,43 +56,42 @@
   }
 
   async function loadCategories() {
-  const cats  = await apiFetch('/categories');
-  console.log('Categories response:', cats);
-  const tbody = document.getElementById('catTable');
+    var cats  = await apiFetch('/categories');
+    var tbody = document.getElementById('catTable');
 
-  if (!cats || cats.length === 0) {
-    tbody.innerHTML = '<tr><td colspan="3">No categories yet</td></tr>';
-    return;
-  }
-
-  let html = '';
-  cats.forEach(c => {
-    const subs = Array.isArray(c.subCategories) ? c.subCategories.join(', ') : '';
-    html += '<tr>';
-    html += '<td>' + c.categoryName + '</td>';
-    html += '<td>' + subs + '</td>';
-    html += '<td>';
-    if (isAdmin) {
-      html += '<button class="btn btn-danger btn-sm" onclick="deleteCategory(\'' + c._id + '\')">Delete</button>';
+    if (!cats || cats.length === 0) {
+      tbody.innerHTML = '<tr><td colspan="3">No categories yet</td></tr>';
+      return;
     }
-    html += '</td>';
-    html += '</tr>';
-  });
-  tbody.innerHTML = html;
-}
-  catch (error) {
-    console.error("Failed to load categories:", error.message);
+
+    var html = '';
+    for (var i = 0; i < cats.length; i++) {
+      var c    = cats[i];
+      var subs = Array.isArray(c.subCategories) ? c.subCategories.join(', ') : '';
+      html += '<tr>';
+      html += '<td>' + c.categoryName + '</td>';
+      html += '<td>' + subs + '</td>';
+      html += '<td>';
+      if (isAdmin) {
+        html += '<button class="btn btn-danger btn-sm" onclick="deleteCategory(\'' + c._id + '\')">Delete</button>';
+      }
+      html += '</td>';
+      html += '</tr>';
+    }
+    tbody.innerHTML = html;
   }
-}
 
   async function addCategory() {
-    const categoryName  = document.getElementById('categoryName').value.trim();
-    const subCategories = document.getElementById('subCategories').value
-      .split(',').map(s => s.trim()).filter(Boolean);
+    var categoryName  = document.getElementById('categoryName').value.trim();
+    var subCatInput   = document.getElementById('subCategories').value;
+    var subCategories = subCatInput.split(',').map(function(s) { return s.trim(); }).filter(Boolean);
 
-    if (!categoryName) return showAlert('alert', 'Enter category name');
+    if (!categoryName) {
+      showAlert('alert', 'Enter category name');
+      return;
+    }
 
-    const data = await apiFetch('/api/categories', 'POST', { categoryName, subCategories });
+    var data = await apiFetch('/categories', 'POST', { categoryName: categoryName, subCategories: subCategories });
     if (data._id) {
       showAlert('alert', 'Category added!', 'success');
       document.getElementById('categoryName').value  = '';
