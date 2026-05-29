@@ -66,16 +66,23 @@
   }
 
   async function loadCategories() {
-    categories = await apiFetch('/categories') || [];
-    const sel  = document.getElementById('category');
-    categories.forEach(c => {
-      const opt = document.createElement('option');
-      opt.value = c.categoryName;
-      opt.textContent = c.categoryName;
-      sel.appendChild(opt);
-    });
-  }
+  const categories = [
+    { categoryName: 'Kitchen',   subCategories: ['Pasta','Sauce','Cheese','Vegetables','Bread','Cooking Ingredients'] },
+    { categoryName: 'Bar',       subCategories: ['Soda','Coffee','Milk','Syrups','Cups','Straws'] },
+    { categoryName: 'Takeaway',  subCategories: ['Pizza Box','Paper Bag','Parcel Box','Disposable Spoon','Tissue','Cups'] },
+    { categoryName: 'Crockery',  subCategories: ['Plates','Bowls','Cups','Glasses','Spoons','Forks','Knives'] }
+  ];
 
+  allCategories = categories;
+  const sel = document.getElementById('category');
+  sel.innerHTML = '<option value="">Select Category</option>';
+  categories.forEach(function(c) {
+    var opt = document.createElement('option');
+    opt.value = c.categoryName;
+    opt.textContent = c.categoryName;
+    sel.appendChild(opt);
+  });
+}
   function loadSubCats() {
     const cat = categories.find(c => c.categoryName === document.getElementById('category').value);
     const sel = document.getElementById('subCategory');
