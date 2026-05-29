@@ -64,7 +64,7 @@
     async function loadItems() {
       const search = document.getElementById('search').value;
       const category = document.getElementById('filterCat').value;
-      let url = '/api/inventory?stockType=cafe';
+      let url = '/inventory?stockType=cafe';
       if (search) url += '&search=' + search;
       if (category) url += '&category=' + category;
 
@@ -100,7 +100,7 @@
 
     async function deleteItem(id) {
       if (!confirm('Delete this item?')) return;
-      await apiFetch('/api/inventory/' + id, 'DELETE');
+      await apiFetch('/inventory/' + id, 'DELETE');
       loadItems();
     }
 
