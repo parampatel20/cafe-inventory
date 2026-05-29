@@ -22,7 +22,13 @@
       </div>
       <div class="form-group">
         <label>Category</label>
-        <select id="category"></select>
+        <select id="category">
+          <option value="">Select Category</option>
+          <option value="Kitchen">Kitchen</option>
+          <option value="Bar">Bar</option>
+          <option value="Takeaway">Takeaway</option>
+          <option value="Crockery">Crockery</option>
+        </select>
       </div>
       <div class="form-group">
         <label>Sub Category</label>
@@ -57,9 +63,9 @@
   checkAuth();
   loadSidebar('inventory');
 
-  const params    = new URLSearchParams(window.location.search);
-  const id        = params.get('id');
-  const stockType = params.get('stockType') || 'cafe';
+  var params    = new URLSearchParams(window.location.search);
+  var id        = params.get('id');
+  var stockType = params.get('stockType') || 'cafe';
 
   function goBack() {
     window.location.href = stockType === 'godown'
@@ -72,7 +78,8 @@
       showAlert('alert', 'No item ID found');
       return;
     }
-    const item = await apiFetch('/inventory/' + id);
+
+    var item = await apiFetch('/inventory/' + id);
     if (!item || !item._id) {
       showAlert('alert', 'Item not found');
       return;
@@ -83,20 +90,11 @@
     document.getElementById('quantity').value    = item.quantity    || '';
     document.getElementById('price').value       = item.price       || '';
     document.getElementById('unit').value        = item.unit        || 'kg';
-
-const hardcodedCats = ['Kitchen', 'Bar', 'Takeaway', 'Crockery'];
-const sel = document.getElementById('category');
-sel.innerHTML = '';
-hardcodedCats.forEach(function(c) {
-  var opt = document.createElement('option');
-  opt.value = c;
-  opt.textContent = c;
-  if (c === item.category) opt.selected = true;
-  sel.appendChild(opt);
-});
+    document.getElementById('category').value    = item.category    || '';
+  }
 
   async function updateItem() {
-    const body = {
+    var body = {
       itemName:    document.getElementById('itemName').value,
       category:    document.getElementById('category').value,
       subCategory: document.getElementById('subCategory').value,
@@ -111,10 +109,10 @@ hardcodedCats.forEach(function(c) {
       return;
     }
 
-    const data = await apiFetch('/inventory/' + id, 'PUT', body);
+    var data = await apiFetch('/inventory/' + id, 'PUT', body);
     if (data._id) {
       showAlert('alert', 'Item updated!', 'success');
-      setTimeout(() => goBack(), 1500);
+      setTimeout(function() { goBack(); }, 1500);
     } else {
       showAlert('alert', data.message || 'Update failed');
     }
