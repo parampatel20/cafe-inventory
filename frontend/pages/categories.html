@@ -15,6 +15,19 @@
       <h2>Categories</h2>
     </div>
     <div class="section-card">
+      <h3>Add Category</h3>
+      <div id="alert" class="alert" style="display:none"></div>
+      <div class="form-group">
+        <label>Category Name</label>
+        <input type="text" id="categoryName" placeholder="e.g. Kitchen"/>
+      </div>
+      <div class="form-group">
+        <label>Sub Categories (comma separated)</label>
+        <input type="text" id="subCategories" placeholder="e.g. Pasta, Sauce, Cheese"/>
+      </div>
+      <button class="btn btn-primary" onclick="addCategory()">Add Category</button>
+    </div>
+    <div class="section-card">
       <h3>All Categories</h3>
       <div class="table-container">
         <table>
@@ -22,6 +35,7 @@
             <tr>
               <th>Name</th>
               <th>Sub Categories</th>
+              <th id="actionHeader">Actions</th>
             </tr>
           </thead>
           <tbody id="catTable"></tbody>
@@ -35,13 +49,18 @@
 <script>
   checkAuth();
   loadSidebar('categories');
+  var isAdmin = getUser().role === 'admin';
+
+  if (!isAdmin) {
+    document.getElementById('actionHeader').style.display = 'none';
+  }
 
   async function loadCategories() {
     var cats  = await apiFetch('/categories');
     var tbody = document.getElementById('catTable');
 
     if (!cats || cats.length === 0) {
-      tbody.innerHTML = '<tr><td colspan="2">No categories found</td></tr>';
+      tbody.innerHTML = '<tr><td colspan="3">No categories yet</td></tr>';
       return;
     }
 
@@ -51,9 +70,41 @@
       html += '<tr>';
       html += '<td><strong>' + c.categoryName + '</strong></td>';
       html += '<td>' + subs + '</td>';
+      html += '<td>';
+      if (isAdmin) {
+        html += '<button class="btn btn-danger btn-sm" onclick="deleteCategory(\'' + c._id + '\')">Delete</button>';
+      }
+      html += '</td>';
       html += '</tr>';
     });
     tbody.innerHTML = html;
+  }
+
+  async function addCategory() {
+    var categoryName  = document.getElementById('categoryName').value.trim();
+    var subCategories = document.getElementById('subCategories').value
+      .split(',').map(function(s) { return s.trim(); }).filter(Boolean);
+
+    if (!categoryName) {
+      showAlert('alert', 'Enter category name');
+      return;
+    }
+
+    var data = await apiFetch('/categories', 'POST', { categoryName: categoryName, subCategories: subCategories });
+    if (data._id) {
+      showAlert('alert', 'Category added!', 'success');
+      document.getElementById('categoryName').value  = '';
+      document.getElementById('subCategories').value = '';
+      loadCategories();
+    } else {
+      showAlert('alert', data.message || 'Error adding category');
+    }
+  }
+
+  async function deleteCategory(id) {
+    if (!confirm('Delete this category?')) return;
+    await apiFetch('/categories/' + id, 'DELETE');
+    loadCategories();
   }
 
   loadCategories();
