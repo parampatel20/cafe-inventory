@@ -84,6 +84,22 @@
   </div>
 </div>
 
+  <div class="section-card">
+  <h3>🗑️ Recently Deleted Items</h3>
+  <table>
+    <thead>
+      <tr>
+        <th>Item</th>
+        <th>Category</th>
+        <th>Qty</th>
+        <th>Deleted By</th>
+        <th>Date & Time</th>
+      </tr>
+    </thead>
+    <tbody id="deleteLogTable"></tbody>
+  </table>
+</div>
+
 <script>
   const API = 'https://cafe-inventory-18mx.onrender.com/api';
   function getToken() { return localStorage.getItem('token'); }
