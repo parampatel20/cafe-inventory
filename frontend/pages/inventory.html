@@ -1,112 +1,102 @@
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Café Stock</title>
-  <link rel="stylesheet" href="../css/style.css" />
+  <link rel="stylesheet" href="../css/style.css"/>
 </head>
-
 <body>
-  <div class="layout">
-    <aside class="sidebar" id="sidebar"></aside>
-    <div class="main-content">
-      <div class="topbar">
-        <button class="hamburger" onclick="document.getElementById('sidebar').classList.toggle('open')">☰</button>
-        <h2>☕ Café Stock</h2>
-        <a href="/pages/add-item.html" class="btn btn-primary btn-sm">+ Add Item</a>
+<div class="layout">
+  <aside class="sidebar" id="sidebar"></aside>
+  <div class="main-content">
+    <div class="topbar">
+      <button class="hamburger" onclick="document.getElementById('sidebar').classList.toggle('open')">☰</button>
+      <h2>☕ Café Stock</h2>
+      <a href="/pages/add-item.html" class="btn btn-primary btn-sm">+ Add Item</a>
+    </div>
+    <div class="section-card">
+      <div class="search-bar">
+        <input type="text" id="search" placeholder="Search item..." oninput="loadItems()"/>
+        <select id="filterCat" onchange="loadItems()">
+          <option value="">All Categories</option>
+          <option value="Kitchen">Kitchen</option>
+          <option value="Bar">Bar</option>
+          <option value="Takeaway">Takeaway</option>
+          <option value="Crockery">Crockery</option>
+        </select>
       </div>
-      <div class="section-card">
-        <div class="search-bar">
-          <input type="text" id="search" placeholder="Search item..." oninput="loadItems()" />
-          <select id="filterCat" onchange="loadItems()">
-            <option value="">All Categories</option>
-          </select>
-        </div>
-        <div class="table-container">
-          <table>
-            <thead>
-              <tr>
-                <th>Item</th>
-                <th>Category</th>
-                <th>Qty</th>
-                <th>Unit</th>
-                <th>Price</th>
-                <th>Added By</th>
-                <th>Actions</th>
-              </tr>
-            </thead>
-            <tbody id="inventoryTable"></tbody>
-          </table>
-        </div>
+      <div class="table-container">
+        <table>
+          <thead>
+            <tr>
+              <th>Item</th>
+              <th>Category</th>
+              <th>Qty</th>
+              <th>Unit</th>
+              <th>Price</th>
+              <th>Added By</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody id="inventoryTable"></tbody>
+        </table>
       </div>
     </div>
   </div>
-  <script src="../js/api.js"></script>
-  <script src="../js/sidebar.js"></script>
-  <script>
-    checkAuth();
-    loadSidebar('inventory');
-    const isAdmin = getUser().role === 'admin';
+</div>
+<script src="../js/api.js"></script>
+<script src="../js/sidebar.js"></script>
+<script>
+  checkAuth();
+  loadSidebar('inventory');
+  var isAdmin = getUser().role === 'admin';
 
-    async function loadCategories() {
-      const cats = await apiFetch('/categories');
-      const sel = document.getElementById('filterCat');
-      (cats || []).forEach(c => {
-        const opt = document.createElement('option');
-        opt.value = c.categoryName;
-        opt.textContent = c.categoryName;
-        sel.appendChild(opt);
-      });
+  async function loadItems() {
+    var search   = document.getElementById('search').value;
+    var category = document.getElementById('filterCat').value;
+    var url      = '/inventory?stockType=cafe';
+    if (search)   url += '&search='   + search;
+    if (category) url += '&category=' + category;
+
+    var items = await apiFetch(url);
+    var tbody = document.getElementById('inventoryTable');
+
+    if (!items || items.length === 0) {
+      tbody.innerHTML = '<tr><td colspan="7">No items found</td></tr>';
+      return;
     }
 
-    async function loadItems() {
-      const search = document.getElementById('search').value;
-      const category = document.getElementById('filterCat').value;
-      let url = '/inventory?stockType=cafe';
-      if (search) url += '&search=' + search;
-      if (category) url += '&category=' + category;
+    var html = '';
+    items.forEach(function(i) {
+      var editUrl = '/pages/edit-item.html?id=' + i._id + '&stockType=cafe';
+      html += '<tr>';
+      html += '<td>' + i.itemName + '</td>';
+      html += '<td>' + i.category + '</td>';
+      html += '<td>' + i.quantity + '</td>';
+      html += '<td>' + i.unit + '</td>';
+      html += '<td>₹' + i.price + '</td>';
+      html += '<td>' + (i.addedBy ? i.addedBy.name : 'N/A') + '</td>';
+      html += '<td>';
+      html += '<a href="' + editUrl + '" class="btn btn-secondary btn-sm">Edit</a> ';
+      html += '<button class="btn btn-danger btn-sm" onclick="deleteItem(\'' + i._id + '\')">Delete</button>';
+      html += '</td>';
+      html += '</tr>';
+    });
+    tbody.innerHTML = html;
+  }
 
-      const items = await apiFetch(url);
-      const tbody = document.getElementById('inventoryTable');
-
-      if (!items || items.length === 0) {
-        tbody.innerHTML = '<tr><td colspan="7">No items found</td></tr>';
-        return;
-      }
-
-      let html = '';
-      items.forEach(i => {
-        const editUrl = '/pages/edit-item.html?id=' + i._id + '&stockType=cafe';
-        html += '<tr>';
-        html += '<td>' + i.itemName + '</td>';
-        html += '<td>' + i.category + '</td>';
-        html += '<td>' + i.quantity + '</td>';
-        html += '<td>' + i.unit + '</td>';
-        html += '<td>₹' + i.price + '</td>';
-        html += '<td>' + (i.addedBy ? i.addedBy.name : 'N/A') + '</td>';
-        html += '<td>';
-        if (isAdmin) {
-          html += '<a href="/pages/edit-item.html?id=' + i._id + '&stockType=cafe" class="btn btn-secondary btn-sm">Edit</a> ';
-          html += '<button class="btn btn-danger btn-sm" onclick="deleteItem(\'' + i._id + '\')">Delete</button>';
-        } else {
-          html += '<a href="/pages/edit-item.html?id=' + i._id + '&stockType=cafe" class="btn btn-secondary btn-sm">Add Qty</a>';
-        }
-        html += '</td></tr>';
-      });
-      tbody.innerHTML = html;
-    }
-
-    async function deleteItem(id) {
-      if (!confirm('Delete this item?')) return;
-      await apiFetch('/inventory/' + id, 'DELETE');
+  async function deleteItem(id) {
+    if (!confirm('Delete this item?')) return;
+    var data = await apiFetch('/inventory/' + id, 'DELETE');
+    if (data.message === 'Item deleted successfully') {
       loadItems();
+    } else {
+      alert(data.message || 'Error deleting item');
     }
+  }
 
-    loadCategories();
-    loadItems();
-  </script>
+  loadItems();
+</script>
 </body>
-
 </html>
