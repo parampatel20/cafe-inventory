@@ -74,8 +74,7 @@ exports.updateItem = async (req, res) => {
     if (subCategory !== undefined) updateData.subCategory = subCategory;
     if (unit)                      updateData.unit        = unit;
     if (stockType)                 updateData.stockType   = stockType;
-
-    if (price && isAdmin) updateData.price = Number(price);
+    if (price && isAdmin)          updateData.price       = Number(price);
 
     if (quantity !== undefined) {
       const newQty = Number(quantity);
@@ -86,10 +85,10 @@ exports.updateItem = async (req, res) => {
     }
 
     const item = await Inventory.findByIdAndUpdate(
-  req.params.id,
-  updateData,
-  { returnDocument: 'after' }
-);
+      req.params.id,
+      updateData,
+      { returnDocument: 'after' }
+    );
 
     res.json(item);
   } catch (err) {
@@ -101,10 +100,10 @@ exports.updateItem = async (req, res) => {
 exports.updatePrice = async (req, res) => {
   try {
     const item = await Inventory.findByIdAndUpdate(
-  req.params.id,
-  { price: Number(req.body.price), updatedBy: req.user._id },
-  { returnDocument: 'after' }
-);
+      req.params.id,
+      { price: Number(req.body.price), updatedBy: req.user._id },
+      { returnDocument: 'after' }
+    );
     if (!item) return res.status(404).json({ message: 'Item not found' });
     res.json(item);
   } catch (err) {
@@ -112,8 +111,6 @@ exports.updatePrice = async (req, res) => {
     res.status(500).json({ message: err.message });
   }
 };
-
-const DeleteLog = require('../models/DeleteLog');
 
 exports.deleteItem = async (req, res) => {
   try {
