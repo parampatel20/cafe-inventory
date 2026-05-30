@@ -1,4 +1,5 @@
 const Inventory = require('../models/Inventory');
+const DeleteLog = require('../models/DeleteLog');
 
 exports.addItem = async (req, res) => {
   try {
@@ -112,13 +113,24 @@ exports.updatePrice = async (req, res) => {
   }
 };
 
+const DeleteLog = require('../models/DeleteLog');
+
 exports.deleteItem = async (req, res) => {
   try {
-    console.log('Deleting item:', req.params.id);
     const item = await Inventory.findById(req.params.id);
     if (!item) return res.status(404).json({ message: 'Item not found' });
+
+    await DeleteLog.create({
+      itemName:  item.itemName,
+      category:  item.category,
+      quantity:  item.quantity,
+      unit:      item.unit,
+      price:     item.price,
+      stockType: item.stockType,
+      deletedBy: req.user ? req.user._id : null
+    });
+
     await Inventory.findByIdAndDelete(req.params.id);
-    console.log('Item deleted successfully');
     res.json({ message: 'Item deleted successfully' });
   } catch (err) {
     console.error('Delete error:', err.message);
