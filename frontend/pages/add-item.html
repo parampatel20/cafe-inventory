@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Add Item</title>
+  <title>Add Café Item</title>
   <link rel="stylesheet" href="../css/style.css"/>
 </head>
 <body>
@@ -11,8 +11,8 @@
   <aside class="sidebar" id="sidebar"></aside>
   <div class="main-content">
     <div class="topbar">
-      <button class="hamburger" onclick="toggleSidebar()">☰</button>
-      <h2>Add Inventory Item</h2>
+      <button class="hamburger" onclick="document.getElementById('sidebar').classList.toggle('open')">☰</button>
+      <h2>Add Café Item</h2>
     </div>
     <div class="section-card">
       <div id="alert" class="alert" style="display:none"></div>
@@ -24,6 +24,10 @@
         <label>Category</label>
         <select id="category" onchange="loadSubCats()">
           <option value="">Select Category</option>
+          <option value="Kitchen">Kitchen</option>
+          <option value="Bar">Bar</option>
+          <option value="Takeaway">Takeaway</option>
+          <option value="Crockery">Crockery</option>
         </select>
       </div>
       <div class="form-group">
@@ -59,66 +63,62 @@
 <script>
   checkAuth();
   loadSidebar('add-item');
-  let categories = [];
+  var allCats = [];
 
-  function toggleSidebar() {
-    document.getElementById('sidebar').classList.toggle('open');
-  }
+  async function loadSubCats() {
+    var catName = document.getElementById('category').value;
+    var sel     = document.getElementById('subCategory');
+    sel.innerHTML = '<option value="">Select Sub Category</option>';
 
-  async function loadCategories() {
-  const categories = [
-    { categoryName: 'Kitchen',   subCategories: ['Pasta','Sauce','Cheese','Vegetables','Bread','Cooking Ingredients'] },
-    { categoryName: 'Bar',       subCategories: ['Soda','Coffee','Milk','Syrups','Cups','Straws'] },
-    { categoryName: 'Takeaway',  subCategories: ['Pizza Box','Paper Bag','Parcel Box','Disposable Spoon','Tissue','Cups'] },
-    { categoryName: 'Crockery',  subCategories: ['Plates','Bowls','Cups','Glasses','Spoons','Forks','Knives'] }
-  ];
+    if (!catName) return;
 
-  allCategories = categories;
-  const sel = document.getElementById('category');
-  sel.innerHTML = '<option value="">Select Category</option>';
-  categories.forEach(function(c) {
-    var opt = document.createElement('option');
-    opt.value = c.categoryName;
-    opt.textContent = c.categoryName;
-    sel.appendChild(opt);
-  });
-}
-  function loadSubCats() {
-  const catName = document.getElementById('category').value;
-  const cat     = allCategories.find(function(c) { return c.categoryName === catName; });
-  const sel     = document.getElementById('subCategory');
-  sel.innerHTML = '<option value="">Select Sub Category</option>';
-  if (cat) {
-    cat.subCategories.forEach(function(s) {
-      var opt = document.createElement('option');
-      opt.value = s;
-      opt.textContent = s;
-      sel.appendChild(opt);
+    var cats = await apiFetch('/categories');
+    allCats  = cats || [];
+
+    var matching = allCats.filter(function(c) {
+      return c.categoryName === catName;
+    });
+
+    matching.forEach(function(c) {
+      if (Array.isArray(c.subCategories)) {
+        c.subCategories.forEach(function(s) {
+          var opt = document.createElement('option');
+          opt.value = s;
+          opt.textContent = s;
+          sel.appendChild(opt);
+        });
+      }
     });
   }
-}
 
   async function addItem() {
-    const body = {
+    var body = {
       itemName:    document.getElementById('itemName').value,
       category:    document.getElementById('category').value,
       subCategory: document.getElementById('subCategory').value,
       quantity:    document.getElementById('quantity').value,
       unit:        document.getElementById('unit').value,
-      price:       document.getElementById('price').value
+      price:       document.getElementById('price').value,
+      stockType:   'cafe'
     };
-    if (!body.itemName || !body.category || !body.quantity || !body.price)
-      return showAlert('alert', 'Fill all required fields');
 
-    const data = await apiFetch('/inventory', 'POST', body);
+    if (!body.itemName || !body.category || !body.quantity || !body.price) {
+      showAlert('alert', 'Fill all required fields');
+      return;
+    }
+
+    var data = await apiFetch('/inventory', 'POST', body);
     if (data._id) {
       showAlert('alert', 'Item added successfully!', 'success');
+      document.getElementById('itemName').value = '';
+      document.getElementById('category').value = '';
+      document.getElementById('subCategory').innerHTML = '<option value="">Select Sub Category</option>';
+      document.getElementById('quantity').value = '';
+      document.getElementById('price').value    = '';
     } else {
       showAlert('alert', data.message || 'Error adding item');
     }
   }
-
-  loadCategories();
 </script>
 </body>
 </html>
