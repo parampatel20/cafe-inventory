@@ -5,10 +5,15 @@ const { protect } = require('../middleware/auth');
 
 router.get('/', protect, async (req, res) => {
   try {
-    const logs = await DeleteLog.find()
+    const thirtyDaysAgo = new Date();
+    thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+
+    const logs = await DeleteLog.find({
+      deletedAt: { $gte: thirtyDaysAgo }
+    })
       .populate('deletedBy', 'name')
-      .sort({ deletedAt: -1 })
-      .limit(20);
+      .sort({ deletedAt: -1 });
+
     res.json(logs);
   } catch (err) {
     res.status(500).json({ message: err.message });
