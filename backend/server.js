@@ -34,6 +34,7 @@ app.use('/api/inventory',  require('./routes/inventory'));
 app.use('/api/categories', require('./routes/categories'));
 app.use('/api/bills',      require('./routes/bills'));
 app.use('/api/staff',      require('./routes/staff'));
+app.use('/api/deletelog', require('./routes/deletelog'));
 
 app.use((err, req, res, next) => {
   console.error(err.stack);
